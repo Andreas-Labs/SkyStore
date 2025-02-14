@@ -65,8 +65,8 @@ services:
       - "8001:8001"
     environment:
       - REDIS_ARGS="--appendonly yes"
-    volumes:
-      - redis-data:/data
+   # volumes:
+     # - redis-data:/data
     networks:
       - skystore-network
     restart: unless-stopped

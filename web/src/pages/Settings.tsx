@@ -14,11 +14,14 @@ import {
   Divider,
   TextInput,
   Select,
+  LoadingOverlay,
 } from '@mantine/core';
-import { notifications } from '@mantine/notifications';
-import { IconCheck } from '@tabler/icons-react';
+import { useCurrentUser } from '../contexts/UserContext';
+import { useUpdateUserSettings } from '../api/hooks/useUser';
 
 export function Settings() {
+  const { user: currentUser, isLoading } = useCurrentUser();
+  const updateSettingsMutation = useUpdateUserSettings();
   const [settings, setSettings] = React.useState({
     darkMode: true,
     accentColor: '#1971c2',
@@ -30,15 +33,37 @@ export function Settings() {
     mapStyle: 'satellite',
   });
 
+  // Initialize settings from user data
+  React.useEffect(() => {
+    if (currentUser) {
+      setSettings(currentUser.settings);
+    }
+  }, [currentUser]);
+
   const handleSave = () => {
-    // In real app, this would call an API
-    notifications.show({
-      title: 'Settings saved',
-      message: 'Your preferences have been updated',
-      color: 'green',
-      icon: <IconCheck size={16} />,
+    if (!currentUser) return;
+    
+    updateSettingsMutation.mutate({
+      id: currentUser.id,
+      data: settings
     });
   };
+
+  if (isLoading) {
+    return (
+      <Container size="md" py="xl">
+        <LoadingOverlay visible={true} />
+      </Container>
+    );
+  }
+
+  if (!currentUser) {
+    return (
+      <Container size="md" py="xl">
+        <Text>Please create a user profile first</Text>
+      </Container>
+    );
+  }
 
   return (
     <Container size="md" py="xl">
@@ -160,10 +185,17 @@ export function Settings() {
             <Divider />
 
             <Group justify="flex-end">
-              <Button variant="light" onClick={() => window.history.back()}>
+              <Button 
+                variant="light" 
+                onClick={() => window.history.back()}
+                disabled={updateSettingsMutation.isPending}
+              >
                 Cancel
               </Button>
-              <Button onClick={handleSave}>
+              <Button 
+                onClick={handleSave}
+                loading={updateSettingsMutation.isPending}
+              >
                 Save Changes
               </Button>
             </Group>

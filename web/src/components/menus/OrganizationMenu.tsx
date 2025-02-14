@@ -2,14 +2,13 @@ import React from 'react';
 import { Menu, Text, UnstyledButton, Group, Loader } from '@mantine/core';
 import { IconChevronDown, IconPlus, IconBuilding } from '@tabler/icons-react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Organization } from '../../api/client';
 import { useOrganizations } from '../../api/hooks';
 
 export function OrganizationMenu() {
   const navigate = useNavigate();
-  const { organization: urlOrg } = useParams();
+  const { organization } = useParams();
   const { data: organizations = [], isLoading, error } = useOrganizations();
-  const currentOrganization = organizations.find(o => o.key === urlOrg);
+  const currentOrganization = organizations.find(org => org.key === organization);
 
   return (
     <Menu position="bottom-start" shadow="md" width={220}>
@@ -37,7 +36,7 @@ export function OrganizationMenu() {
           organizations.map((org) => (
             <Menu.Item 
               key={org.key} 
-              onClick={() => navigate(`/org/${org.key}`, { replace: true })}
+              onClick={() => navigate(`/org/${org.key}`)}
             >
               <Text size="sm">{org.name}</Text>
             </Menu.Item>

@@ -1,0 +1,11 @@
+type: library
+language: typescript
+
+tasks:
+  build:
+    command: bun run build
+    outputs:
+    - dist
+
+  dev:
+    command: bun run dev

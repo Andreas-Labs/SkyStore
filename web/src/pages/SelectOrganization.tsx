@@ -1,131 +1,115 @@
 import React from 'react';
-import { Container, Grid, Card, Text, Button, Group, Stack, Loader, Center } from '@mantine/core';
-import { IconPlus, IconBuilding } from '@tabler/icons-react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { 
+  Title, 
+  Text, 
+  Card, 
+  Stack,
+  Button,
+  Group,
+  ThemeIcon,
+  SimpleGrid,
+  Container,
+  Center,
+  Box,
+} from '@mantine/core';
+import { IconBuildingSkyscraper, IconPlus } from '@tabler/icons-react';
+import { useNavigate } from 'react-router-dom';
 import { useOrganizations } from '../api/hooks';
-import { useQueryClient } from '@tanstack/react-query';
+import { useCurrentUser } from '../contexts/UserContext';
 
 export function SelectOrganization() {
   const navigate = useNavigate();
-  const location = useLocation();
-  const queryClient = useQueryClient();
-  
-  const { 
-    data: organizations = [], 
-    isLoading,
-    error,
-    refetch,
-    isFetching,
-  } = useOrganizations();
-
-  // Clear cache when mounting this component
-  React.useEffect(() => {
-    if (location.pathname === '/org') {
-      queryClient.clear();
-    }
-  }, [location.pathname, queryClient]);
-
-  const handleSelectOrganization = React.useCallback((orgId: string) => {
-    if (location.pathname === `/org/${orgId}`) return;
-    queryClient.clear();
-    navigate(`/org/${orgId}`, { replace: true });
-  }, [navigate, queryClient, location.pathname]);
-
-  if (!location.pathname.startsWith('/org') || location.pathname.length > 4) {
-    return null;
-  }
-
-  if (isLoading) {
-    return (
-      <Center h="100%">
-        <Loader size="xl" />
-      </Center>
-    );
-  }
-
-  if (error) {
-    return (
-      <Container size="lg" py="xl">
-        <Card withBorder p="xl">
-          <Stack align="center" gap="md">
-            <IconBuilding size={48} opacity={0.5} color="red" />
-            <Text ta="center" size="lg" fw={500} c="red">Error Loading Organizations</Text>
-            <Text ta="center" c="dimmed">{error instanceof Error ? error.message : 'Failed to load organizations'}</Text>
-            <Button
-              variant="light"
-              onClick={() => refetch()}
-              loading={isFetching}
-            >
-              Retry
-            </Button>
-          </Stack>
-        </Card>
-      </Container>
-    );
-  }
+  const { data: organizations = [], isLoading } = useOrganizations();
+  const { user } = useCurrentUser();
 
   return (
-    <Container size="lg" py="xl">
-      <Stack gap="xl">
-        <Group justify="space-between" align="center">
-          <Stack gap={0}>
-            <Text size="xl" fw={700}>Select Organization</Text>
-            <Text c="dimmed">Select an existing organization or create a new one to get started</Text>
+    <Box h="100%" pt={100}>
+      <Container size="lg" h="100%">
+        <Stack gap={50} justify="flex-start">
+          <Stack gap="xs" align="center">
+            <Title order={2} fw={500} className="text-gradient" ta="center">
+              Welcome back, {user?.name}
+            </Title>
+            <Text size="lg" c="dimmed" ta="center">
+              Select an organization to get started
+            </Text>
           </Stack>
-          <Button
-            leftSection={<IconPlus size={16} />}
-            onClick={() => navigate('/org/create')}
-          >
-            Create Organization
-          </Button>
-        </Group>
 
-        {organizations.length === 0 ? (
-          <Card withBorder p="xl">
-            <Stack align="center" gap="md">
-              <IconBuilding size={48} opacity={0.5} />
-              <Text ta="center" size="lg" fw={500}>No Organizations Yet</Text>
-              <Text ta="center" c="dimmed">
-                Create your first organization to start managing your astronomical projects
-              </Text>
+          <Stack gap="xl">
+            <Group justify="flex-end">
               <Button
-                variant="light"
                 leftSection={<IconPlus size={16} />}
                 onClick={() => navigate('/org/create')}
               >
                 Create Organization
               </Button>
-            </Stack>
-          </Card>
-        ) : (
-          <Grid>
-            {organizations.map((org) => (
-              <Grid.Col key={org.id} span={{ base: 12, sm: 6, md: 4 }}>
-                <Card withBorder p="lg" radius="md">
-                  <Stack gap="md">
-                    <Group wrap="nowrap">
-                      <IconBuilding size={24} />
-                      <Text fw={500} size="lg" truncate="end">
-                        {org.name}
+            </Group>
+
+            {organizations.length === 0 && !isLoading ? (
+              <Card withBorder className="neo-glass">
+                <Stack align="center" gap="md" py="xl">
+                  <ThemeIcon
+                    size={60}
+                    radius="md"
+                    className="glass-icon"
+                  >
+                    <IconBuildingSkyscraper size={30} />
+                  </ThemeIcon>
+                  <Text ta="center" fw={500}>No Organizations Yet</Text>
+                  <Text ta="center" size="sm" c="dimmed">
+                    Create your first organization to start managing projects
+                  </Text>
+                  <Button
+                    leftSection={<IconPlus size={16} />}
+                    onClick={() => navigate('/org/create')}
+                  >
+                    Create Organization
+                  </Button>
+                </Stack>
+              </Card>
+            ) : (
+              <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
+                {organizations.map((org) => (
+                  <Card 
+                    key={org.key} 
+                    withBorder
+                    className="neo-glass"
+                    onClick={() => navigate(`/org/${org.key}`)}
+                    style={{ cursor: 'pointer' }}
+                    padding="lg"
+                  >
+                    <Stack gap="md">
+                      <Group>
+                        <ThemeIcon
+                          size={40}
+                          radius="md"
+                          className="glass-icon"
+                        >
+                          <IconBuildingSkyscraper size={24} />
+                        </ThemeIcon>
+                        <Text fw={500} size="lg">{org.name}</Text>
+                      </Group>
+                      <Text size="sm" c="dimmed" lineClamp={2}>
+                        {org.description}
                       </Text>
-                    </Group>
-                    <Text size="sm" c="dimmed" lineClamp={2}>
-                      {org.description}
-                    </Text>
-                    <Button
-                      variant="light"
-                      fullWidth
-                      onClick={() => handleSelectOrganization(org.key)}
-                    >
-                      Select Organization
-                    </Button>
-                  </Stack>
-                </Card>
-              </Grid.Col>
-            ))}
-          </Grid>
-        )}
-      </Stack>
-    </Container>
+                      <Button 
+                        variant="light" 
+                        fullWidth
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/org/${org.key}`);
+                        }}
+                      >
+                        View Projects
+                      </Button>
+                    </Stack>
+                  </Card>
+                ))}
+              </SimpleGrid>
+            )}
+          </Stack>
+        </Stack>
+      </Container>
+    </Box>
   );
 }

@@ -1,0 +1,9 @@
+{
+  "name": "skystore",
+  "private": true,
+  "workspaces": [
+    "app",
+    "web",
+    "core_types"
+  ]
+} 

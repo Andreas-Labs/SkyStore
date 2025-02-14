@@ -103,6 +103,65 @@ export interface Asset {
   thumbnailUrl?: string;
 }
 
+// User types
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  avatar?: string | null;
+  bio?: string;
+  location?: string;
+  company?: string;
+  website?: string;
+  joinDate: string;
+  settings: {
+    darkMode: boolean;
+    accentColor: string;
+    notifications: boolean;
+    emailNotifications: boolean;
+    autoSave: boolean;
+    language: string;
+    timezone: string;
+    mapStyle: string;
+  };
+}
+
+export interface UpdateUserPayload {
+  name?: string;
+  email?: string;
+  avatar?: string | null;
+  bio?: string;
+  location?: string;
+  company?: string;
+  website?: string;
+}
+
+export interface UpdateUserSettingsPayload {
+  darkMode?: boolean;
+  accentColor?: string;
+  notifications?: boolean;
+  emailNotifications?: boolean;
+  autoSave?: boolean;
+  language?: string;
+  timezone?: string;
+  mapStyle?: string;
+}
+
+export interface CreateUserPayload {
+  id: string;
+  name: string;
+  email: string;
+  bio?: string;
+  location?: string;
+  company?: string;
+  website?: string;
+}
+
+export interface ListUsersParams {
+  page?: number;
+  limit?: number;
+}
+
 // API Configuration
 const API_URL = 'http://localhost:4000';
 
@@ -123,18 +182,14 @@ async function apiFetch<T>(
     headers,
   });
 
-  const data = await response.json();
+  const json = await response.json();
 
   if (!response.ok) {
-    throw new Error(data.error || `HTTP error! status: ${response.status}`);
+    throw new Error(json.error || `HTTP error! status: ${response.status}`);
   }
 
-  // For endpoints that don't return data
-  if (response.status === 204) {
-    return {} as T;
-  }
-
-  return data.data as T;
+  // Return the data property from the response if it exists, otherwise return the entire response
+  return (json.data !== undefined ? json.data : json) as T;
 }
 
 // API Client implementation
@@ -284,5 +339,73 @@ export const apiClient = {
       }
     );
 
+  },
+
+  // User endpoints
+  listUsers: async ({ page = 1, limit = 10 }: ListUsersParams = {}): Promise<User[]> => {
+    const response = await fetch(`${API_URL}/user/list?page=${page}&limit=${limit}`);
+    if (!response.ok) {
+      throw new Error('Failed to list users');
+    }
+    return response.json();
+  },
+
+  createUser: async (data: CreateUserPayload): Promise<User> => {
+    const response = await fetch(`${API_URL}/user`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+      throw new Error('Failed to create user');
+    }
+    return response.json();
+  },
+
+  getUser: async (id: string): Promise<User> => {
+    const response = await fetch(`${API_URL}/user/${id}`);
+    if (!response.ok) {
+      throw new Error('Failed to get user');
+    }
+    return response.json();
+  },
+
+  updateUser: async (id: string, data: UpdateUserPayload): Promise<User> => {
+    const response = await fetch(`${API_URL}/user/${id}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+      throw new Error('Failed to update user');
+    }
+    return response.json();
+  },
+
+  updateUserSettings: async (id: string, data: UpdateUserSettingsPayload): Promise<User> => {
+    const response = await fetch(`${API_URL}/user/${id}/settings`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+      throw new Error('Failed to update user settings');
+    }
+    return response.json();
+  },
+
+  deleteUser: async (id: string): Promise<void> => {
+    const response = await fetch(`${API_URL}/user/${id}`, {
+      method: 'DELETE',
+    });
+    if (!response.ok) {
+      throw new Error('Failed to delete user');
+    }
   },
 }; 

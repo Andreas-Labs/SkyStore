@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { apiClient, Organization, Project, Mission, Asset } from '../client';
+import { apiClient, type Organization, type Project, type Mission, type Asset } from '../client';
 import { queryClient } from '../queryClient';
 
 // Query key factory
